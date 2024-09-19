@@ -18,3 +18,6 @@ Elle est développée en **Java** à l'aide de la bibliothèque **Swing** pour l
 Cette application peut être étendue pour inclure des fonctionnalités supplémentaires, comme la gestion des utilisateurs ou l'amélioration des interactions avec la base de données.
 
 ![img](./imgs/interface.png)
+
+![img](./imgs/db.png)
+
