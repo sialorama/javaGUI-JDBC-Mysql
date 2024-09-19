@@ -1,12 +1,40 @@
 package standalone;
 
 import javax.swing.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
 public class SaisiePersonneGUI extends JFrame {
+	
+	private Connection connectDatabase() {
+	    Connection connection = null;
+	    try {
+	        // Load the MySQL JDBC driver
+	        Class.forName("com.mysql.cj.jdbc.Driver");
+
+	        // Define connection URL
+	        String url = "jdbc:mysql://localhost:3306/saisiepersonnedb"; // Replace with your DB name
+	        String username = "root"; // Replace with your MySQL username
+	        String password = ""; // Replace with your MySQL password
+
+	        // Establish connection
+	        connection = DriverManager.getConnection(url, username, password);
+	        System.out.println("Database connected successfully!");
+	    } catch (ClassNotFoundException | SQLException e) {
+	        e.printStackTrace();
+	        JOptionPane.showMessageDialog(this, "Database connection failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	    }
+	    return connection;
+	}
+
     // Champs de saisie
     private JTextField nomField;
     private JTextField prenomField;
@@ -193,8 +221,47 @@ public class SaisiePersonneGUI extends JFrame {
 
     // Méthode pour sauvegarder les champs et l'image
     private void saveFields() {
-        // Implémenter la logique de sauvegarde ici
-        // Par exemple, enregistrer les informations dans un fichier ou une base de données
+        // Get the input data
+        String nom = nomField.getText();
+        String prenom = prenomField.getText();
+        String ageStr = ageField.getText();
+
+        // Check if fields are filled
+        if (nom.isEmpty() || prenom.isEmpty() || ageStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            int age = Integer.parseInt(ageStr);
+
+            // Establish the database connection
+            Connection conn = connectDatabase();
+            if (conn != null) {
+                // Create SQL query
+                String query = "INSERT INTO personne (nom, prenom, age) VALUES (?, ?, ?)";
+
+                // Use PreparedStatement to avoid SQL Injection
+                PreparedStatement stmt = conn.prepareStatement(query);
+                stmt.setString(1, nom);
+                stmt.setString(2, prenom);
+                stmt.setInt(3, age);
+
+                // Execute the insert query
+                int rowsInserted = stmt.executeUpdate();
+                if (rowsInserted > 0) {
+                    JOptionPane.showMessageDialog(this, "Enregistrement réussi!", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                }
+
+                // Close the connection
+                conn.close();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Veuillez entrer un âge valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors de l'enregistrement des données: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // Méthode principale pour lancer l'application
